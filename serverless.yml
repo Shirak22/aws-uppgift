@@ -1,0 +1,99 @@
+service: memo-notes
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: eu-north-1
+  environment:
+    JWT_SECRET: abc123
+  iam: 
+    role: arn:aws:iam::420074400059:role/service-role/serverless-role
+  
+plugins:
+  - serverless-webpack
+
+package:
+  individually: true 
+
+  ### get all notes 
+functions: #lambda functions
+  userRegister:   #function name 
+    handler: functions/userRegister/index.handler #handler path 
+    events:
+      - httpApi: #api 
+          path: '/api/auth/register'
+          method: POST
+
+  userLogin:   #function name 
+    handler: functions/userLogin/index.handler #handler path 
+    events:
+      - httpApi: #api 
+          path: '/api/auth/login'
+          method: POST
+
+  getNotes:   #function name 
+    handler: functions/getNotes/index.handler #handler path 
+    events:
+      - httpApi: #api 
+          path: '/api/notes'
+          method: GET 
+
+  createNote:   #function name 
+    handler: functions/createNote/index.handler #handler path 
+    events:
+      - httpApi: #api 
+          path: '/api/create'
+          method: POST 
+
+  deleteNote:   #function name 
+    handler: functions/deleteNote/index.handler #handler path 
+    events:
+      - httpApi: #api 
+          path: '/api/delete/{id}'
+          method: DELETE 
+
+  updateNote:   #function name 
+    handler: functions/updateNote/index.handler #handler path 
+    events:
+      - httpApi: #api 
+          path: '/api/update/{id}'
+          method: PUT 
+
+
+resources: 
+  Resources:
+    ### All notes Table 
+    memoNotes:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: memo-notes
+        AttributeDefinitions: 
+          - AttributeName: userId
+            AttributeType: S
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: userId 
+            KeyType: HASH
+          - AttributeName: id 
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+
+    ##Registered users 
+    memoNotesUserDb:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: memo-notes-users
+        AttributeDefinitions: 
+          - AttributeName: username
+            AttributeType: S
+          - AttributeName: userId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: username 
+            KeyType: HASH
+          - AttributeName: userId 
+            KeyType: RANGE
+            
+        BillingMode: PAY_PER_REQUEST
